@@ -1,16 +1,15 @@
-
 public class LifeGrid {
 
-    private final int length;
+    private final int height;
     private final int width;
     boolean[][] grid;
 
-    public LifeGrid(int length, int width)
+    public LifeGrid(int width, int height)
     {
-        this.length = length;
+        this.height = height;
         this.width = width;
 
-        grid = new boolean[length][width];
+        grid = new boolean[width][height];
     }
 
     public void putLifeAt(int x, int y)
@@ -31,15 +30,17 @@ public class LifeGrid {
     public LifeGrid generation(int generation)
     {
         LifeGrid nextGenerationGrid = this;
+        LifeGrid currentGenerationGrid;
 
         for (int generationIndex = 0; generationIndex < generation; generationIndex++)
         {
-            nextGenerationGrid = new LifeGrid(length, width);
+            currentGenerationGrid = nextGenerationGrid;
+            nextGenerationGrid = new LifeGrid(width, height);
             for (int xIndex = 0; xIndex < width; xIndex++)
             {
-                for (int yIndex = 0; yIndex < width; yIndex++)
+                for (int yIndex = 0; yIndex < height; yIndex++)
                 {
-                    nextGenerationGrid.putAt(xIndex, yIndex, lifeForLoneliness(xIndex, yIndex));
+                    nextGenerationGrid.putAt(xIndex, yIndex, currentGenerationGrid.lifeTo(xIndex, yIndex));
                 }
             }
         }
@@ -47,12 +48,12 @@ public class LifeGrid {
         return nextGenerationGrid;
     }
 
-    private boolean lifeForLoneliness(int x, int y)
+    private boolean lifeTo(int x, int y)
     {
         int livingNeighboursCount = 0;
-        for (int xIndex = Math.max(x -1, 0); xIndex <= Math.min(x+1, width - 1); xIndex++)
+        for (int xIndex = Math.max(x - 1, 0); xIndex <= Math.min(x + 1, width - 1); xIndex++)
         {
-            for (int yIndex = Math.max(y -1, 0); yIndex <= Math.min(y+1, width - 1); yIndex++)
+            for (int yIndex = Math.max(y - 1, 0); yIndex <= Math.min(y + 1, height - 1); yIndex++)
             {
                 if ((xIndex != x || yIndex != y) && getLifeAt(xIndex, yIndex))
                 {
@@ -61,6 +62,22 @@ public class LifeGrid {
             }
         }
 
-        return livingNeighboursCount > 1;
+        boolean keepAlive = livingNeighboursCount > 1 && livingNeighboursCount < 3 && getLifeAt(x,y);
+        boolean toLife = livingNeighboursCount == 3;
+        boolean toDeath = livingNeighboursCount > 3;
+
+        return (keepAlive || toLife) && !toDeath;
     }
+
+//    @Override
+//    public String toString() {
+//        for (int xIndex = 0; xIndex < width; xIndex++)
+//        {
+//            for (int yIndex = 0; yIndex < height; yIndex++)
+//            {
+//
+//
+//            }
+//        }
+//    }
 }
