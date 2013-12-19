@@ -12,11 +12,12 @@ public class GridTest {
 //    3. Any live cell with two or three live neighbours lives on to the next generation.
 //    4. Any dead cell with exactly three live neighbours becomes a live cell.
 
-    LifeGrid grid;
+    Grid grid;
+
     @Before
     public void before()
     {
-        grid = new LifeGrid(3,3);
+        grid = new FreeSizeGrid();
     }
 
     @Test
@@ -145,11 +146,13 @@ public class GridTest {
 
     private void assertLife(int x, int y, int generation)
     {
-        assertEquals("Death where life expected at " + x + " " + y + " !", true, grid.generation(generation).getLifeAt(x,y));
+        Grid grid = this.grid.generation(generation);
+        assertEquals("Death where life expected at " + x + " " + y + " !", true, grid.getLifeAt(x, y));
     }
 
     private void assertDeath(int x, int y, int generation)
     {
-        assertEquals("Life where death expected at " + x + " " + y + " !", false, grid.generation(generation).getLifeAt(x,y));
+        Grid grid = this.grid.generation(generation);
+        assertEquals("Life where death expected at " + x + " " + y + " !", false, grid.getLifeAt(x, y));
     }
 }
