@@ -32,47 +32,65 @@ public class FreeSizeGrid extends Grid {
     }
 
     private LifeCell getLifeCell(int x, int y) {
-        return (width.get(x).get(y));
+        try
+        {
+            return (width.get(x).get(y));
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
     }
 
     @Override
     public Grid generation(int generation) {
-        FreeSizeGrid nextGenerationGrid = this;
-        FreeSizeGrid currentGenerationGrid;
+        FreeSizeGrid currentGenerationGrid = this;
+        FreeSizeGrid nextGenerationGrid = currentGenerationGrid;
 
         for (int generationIndex = 0; generationIndex < generation; generationIndex++)
         {
-            currentGenerationGrid = nextGenerationGrid;
             nextGenerationGrid = new FreeSizeGrid();
 
             for (Integer cellColumn : width.keySet())
             {
+                System.out.println("Computing column " + cellColumn);
                 for (Integer cellRow : width.get(cellColumn).keySet())
                 {
-                    LifeCell cell = currentGenerationGrid.getLifeCell(cellColumn, cellRow);
+                    System.out.println("Computing row " + cellRow);
+                    LifeCell currentGenerationCell = currentGenerationGrid.getLifeCell(cellColumn, cellRow);
 
                     for (int xIndex = cellColumn - 1; xIndex <= cellColumn + 1; xIndex++)
                     {
                         for (int yIndex = cellRow - 1; yIndex <= cellRow + 1; yIndex++)
                         {
                             //Celle embrione
-                            if (!nextGenerationGrid.getLifeAt(xIndex, yIndex))
+                            LifeCell embrionicCell = nextGenerationGrid.getLifeCell(xIndex, yIndex);
+                            if (embrionicCell == null)
                             {
+                                System.out.println("Put embrion cell at " + xIndex + ", "+ yIndex);
                                 nextGenerationGrid.putCellAt(xIndex, yIndex, new LifeCell());
                             }
 
-                            if (currentGenerationGrid.getLifeAt(xIndex, yIndex) && (xIndex != cellColumn || yIndex != cellRow))
+                            LifeCell neighbourCell = currentGenerationGrid.getLifeCell(xIndex, yIndex);
+                            if (neighbourCell != null && neighbourCell.isAlive && (xIndex != cellColumn || yIndex != cellRow))
                             {
-                                cell.neighbours++;
+                                System.out.println("Put a neighbour in " + xIndex + ", " + yIndex +" for cell at " + cellRow + ", " + cellColumn);
+                                currentGenerationCell.neighbours++;
                             }
                         }
                     }
 
-                    cell.isAlive = cell.willSurvive();
+                    LifeCell nextGenerationCell = new LifeCell();
 
-                    nextGenerationGrid.putCellAt(cellColumn, cellRow, cell);
+                    nextGenerationCell.isAlive = currentGenerationCell.willSurvive();
+                    currentGenerationCell.neighbours = 0;
+
+                    System.out.println("Put a " + nextGenerationCell.isAlive +" for generation " + generationIndex + " cell at " + cellRow + ", " + cellColumn);
+                    nextGenerationGrid.putCellAt(cellColumn, cellRow, nextGenerationCell);
                 }
             }
+
+            currentGenerationGrid = nextGenerationGrid;
         }
 
         return nextGenerationGrid;
@@ -84,15 +102,17 @@ public class FreeSizeGrid extends Grid {
             width.put(xIndex, new HashMap<Integer, LifeCell>());
         }
 
-        if (!width.get(xIndex).containsKey(yIndex))
-        {
-            width.get(xIndex).put(yIndex, cell);
-        }
+        width.get(xIndex).put(yIndex, cell);
     }
 
     public class LifeCell {
         public int neighbours = 0;
         public boolean isAlive = false;
+
+        @Override
+        public String toString() {
+            return isAlive ? "A living cell" : "A Cell Body";
+        }
 
         public boolean willSurvive()
         {
