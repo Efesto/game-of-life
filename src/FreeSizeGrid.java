@@ -1,15 +1,12 @@
 import java.util.HashMap;
 
-/**
- * Created by marcop on 12/19/13.
- */
 public class FreeSizeGrid extends Grid {
 
-    private HashMap<Integer, HashMap<Integer, LifeCell>> width;
+    private HashMap<Integer, HashMap<Integer, LifeCell>> columns;
 
     public FreeSizeGrid()
     {
-        width = new HashMap<Integer, HashMap<Integer, LifeCell>>();
+        columns = new HashMap<Integer, HashMap<Integer, LifeCell>>();
     }
 
     @Override
@@ -34,7 +31,7 @@ public class FreeSizeGrid extends Grid {
     private LifeCell getLifeCell(int x, int y) {
         try
         {
-            return (width.get(x).get(y));
+            return (columns.get(x).get(y));
         }
         catch (Exception e)
         {
@@ -50,31 +47,21 @@ public class FreeSizeGrid extends Grid {
         for (int generationIndex = 0; generationIndex < generation; generationIndex++)
         {
             nextGenerationGrid = new FreeSizeGrid();
+            currentGenerationGrid = currentGenerationGrid.getWithEmbrionalCells();
 
-            for (Integer cellColumn : width.keySet())
+            for (Integer xInGrid : currentGenerationGrid.columns.keySet())
             {
-                System.out.println("Computing column " + cellColumn);
-                for (Integer cellRow : width.get(cellColumn).keySet())
+                for (Integer yInGrid : currentGenerationGrid.columns.get(xInGrid).keySet())
                 {
-                    System.out.println("Computing row " + cellRow);
-                    LifeCell currentGenerationCell = currentGenerationGrid.getLifeCell(cellColumn, cellRow);
+                    LifeCell currentGenerationCell = currentGenerationGrid.getLifeCell(xInGrid, yInGrid);
 
-                    for (int xIndex = cellColumn - 1; xIndex <= cellColumn + 1; xIndex++)
+                    for (int xIndex = xInGrid - 1; xIndex <= xInGrid + 1; xIndex++)
                     {
-                        for (int yIndex = cellRow - 1; yIndex <= cellRow + 1; yIndex++)
+                        for (int yIndex = yInGrid - 1; yIndex <= yInGrid + 1; yIndex++)
                         {
-                            //Celle embrione
-                            LifeCell embrionicCell = nextGenerationGrid.getLifeCell(xIndex, yIndex);
-                            if (embrionicCell == null)
-                            {
-                                System.out.println("Put embrion cell at " + xIndex + ", "+ yIndex);
-                                nextGenerationGrid.putCellAt(xIndex, yIndex, new LifeCell());
-                            }
-
                             LifeCell neighbourCell = currentGenerationGrid.getLifeCell(xIndex, yIndex);
-                            if (neighbourCell != null && neighbourCell.isAlive && (xIndex != cellColumn || yIndex != cellRow))
+                            if (neighbourCell != null && neighbourCell.isAlive && (xIndex != xInGrid || yIndex != yInGrid))
                             {
-                                System.out.println("Put a neighbour in " + xIndex + ", " + yIndex +" for cell at " + cellRow + ", " + cellColumn);
                                 currentGenerationCell.neighbours++;
                             }
                         }
@@ -85,8 +72,7 @@ public class FreeSizeGrid extends Grid {
                     nextGenerationCell.isAlive = currentGenerationCell.willSurvive();
                     currentGenerationCell.neighbours = 0;
 
-                    System.out.println("Put a " + nextGenerationCell.isAlive +" for generation " + generationIndex + " cell at " + cellRow + ", " + cellColumn);
-                    nextGenerationGrid.putCellAt(cellColumn, cellRow, nextGenerationCell);
+                    nextGenerationGrid.putCellAt(xInGrid, yInGrid, nextGenerationCell);
                 }
             }
 
@@ -96,13 +82,40 @@ public class FreeSizeGrid extends Grid {
         return nextGenerationGrid;
     }
 
-    private void putCellAt(int xIndex, int yIndex, LifeCell cell) {
-        if (!width.containsKey(xIndex))
+    private FreeSizeGrid getWithEmbrionalCells()
+    {
+        FreeSizeGrid grid = new FreeSizeGrid();
+        for (Integer xInGrid : columns.keySet())
         {
-            width.put(xIndex, new HashMap<Integer, LifeCell>());
+            for (Integer yInGrid : columns.get(xInGrid).keySet())
+            {
+                grid.putCellAt(xInGrid, yInGrid, getLifeCell(xInGrid, yInGrid));
+
+                for (int xIndex = xInGrid - 1; xIndex <= xInGrid + 1; xIndex++)
+                {
+                    for (int yIndex = yInGrid - 1; yIndex <= yInGrid + 1; yIndex++)
+                    {
+                        //Celle embrione per espansione infinita
+                        LifeCell embrionicCell = getLifeCell(xIndex, yIndex);
+                        if (embrionicCell == null)
+                        {
+                            grid.putCellAt(xIndex, yIndex, new LifeCell());
+                        }
+                    }
+                }
+            }
         }
 
-        width.get(xIndex).put(yIndex, cell);
+        return grid;
+    }
+
+    private void putCellAt(int xIndex, int yIndex, LifeCell cell) {
+        if (!columns.containsKey(xIndex))
+        {
+            columns.put(xIndex, new HashMap<Integer, LifeCell>());
+        }
+
+        columns.get(xIndex).put(yIndex, cell);
     }
 
     public class LifeCell {
@@ -120,7 +133,7 @@ public class FreeSizeGrid extends Grid {
             boolean toLife = neighbours == 3;
             boolean toDeath = neighbours > 3;
 
-            return (keepAlive || toLife) && !toDeath;
+            return ((keepAlive || toLife)) && !toDeath;
         }
     }
 }

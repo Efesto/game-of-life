@@ -82,55 +82,60 @@ public class GridTest {
     @Test
     public void grid_Overcrowding_moreThanThreeNeighbours()
     {
-        //***     *.*
-        //**. ==> *..
-        //...     ...
-
+        //**.     **.
+        //**. ==> ...
+        //*..     **.
 
         grid.putLifeAt(0,0);
-        grid.putLifeAt(0,1);
         grid.putLifeAt(1,0);
+        grid.putLifeAt(0,1);
         grid.putLifeAt(1,1);
-        grid.putLifeAt(2,0);
+        grid.putLifeAt(0,2);
 
         assertLife(0,0,1);
-        assertLife(2,0,1);
-        assertLife(0,1,1);
+        assertLife(1,0,1);
+        assertDeath(2,0,1);
 
-        assertDeath(1,0,1);
+        assertLife(-1,1,1);
+        assertDeath(0,1,1);
         assertDeath(1,1,1);
+        assertDeath(2,1,1);
+
+        assertLife(0,2,1);
+        assertLife(1, 2, 1);
+        assertDeath(2,2,1);
     }
 
     @Test
     public void grid_Overcrowding_lifeWithExactlyThreeNeighbours()
     {
-        // *.*     ***
+        // *.*     *.*
         // *** ==> *.*
-        // ...     ...
+        // ...     .*.
 
         grid.putLifeAt(0,0);
-        grid.putLifeAt(1,0);
+        grid.putLifeAt(2,0);
+        grid.putLifeAt(0,1);
         grid.putLifeAt(1,1);
-        grid.putLifeAt(0,2);
-        grid.putLifeAt(1,2);
+        grid.putLifeAt(2,1);
 
         assertLife(0, 0, 1);
-        assertLife(1, 0, 1);
-        assertDeath(2, 0, 1);
+        assertDeath(1, 0, 1);
+        assertLife(2, 0, 1);
 
-        assertLife(1, 0, 1);
+        assertLife(0, 1, 1);
         assertDeath(1, 1, 1);
         assertLife(2, 1, 1);
 
-        assertLife(0, 2, 1);
+        assertDeath(0, 2, 1);
         assertLife(1, 2, 1);
         assertDeath(2, 2, 1);
     }
 
     @Test
     public void grid_secondGeneration()
-    {
-        // ***     *.*     ...
+    {   //         .*.     .*.
+        // ***     *.*     *.*
         // *.* ==> *.* ==> ...
         // ...     ...     ...
 
@@ -141,13 +146,15 @@ public class GridTest {
         grid.putLifeAt(0,1);
         grid.putLifeAt(2,1);
 
-        assertDeath(0,0,2);
+
+        assertLife(1,-1,2);
+        assertLife(0, 0, 2);
         assertDeath(0,1,2);
-        assertDeath(0,2,2);
+        assertDeath(0, 2, 2);
         assertDeath(1,0,2);
         assertDeath(1,1,2);
         assertDeath(1,2,2);
-        assertDeath(2,0,2);
+        assertLife(2,0,2);
         assertDeath(2,1,2);
         assertDeath(2,2,2);
     }
