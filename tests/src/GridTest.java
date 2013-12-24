@@ -134,7 +134,8 @@ public class GridTest {
 
     @Test
     public void grid_secondGeneration()
-    {   //         .*.     .*.
+    {
+        //         .*.     .*.
         // ***     *.*     *.*
         // *.* ==> *.* ==> ...
         // ...     ...     ...
@@ -146,7 +147,6 @@ public class GridTest {
         grid.putLifeAt(0,1);
         grid.putLifeAt(2,1);
 
-
         assertLife(1,-1,2);
         assertLife(0, 0, 2);
         assertDeath(0,1,2);
@@ -154,9 +154,38 @@ public class GridTest {
         assertDeath(1,0,2);
         assertDeath(1,1,2);
         assertDeath(1,2,2);
-        assertLife(2,0,2);
+        assertLife(2, 0, 2);
         assertDeath(2,1,2);
-        assertDeath(2,2,2);
+        assertDeath(2, 2, 2);
+
+        assertLife(1, -1, 3);
+        assertDeath(0, 0, 3);
+        assertDeath(0,1,3);
+        assertDeath(0, 2, 3);
+        assertLife(1,0,3);
+        assertDeath(1,1,3);
+        assertDeath(1,2,3);
+        assertDeath(2, 0, 3);
+        assertDeath(2,1,3);
+        assertDeath(2, 2, 3);
+    }
+      
+    @Test
+    public void life() throws InterruptedException {
+
+        //glider
+        grid.putLifeAt(0,1);
+        grid.putLifeAt(1,2);
+        grid.putLifeAt(2,0);
+        grid.putLifeAt(2,1);
+        grid.putLifeAt(2,2);
+
+        for (int generation = 0; generation < 20; generation ++)
+        {
+            System.out.print(grid.generation(generation).toString());
+            System.out.println("-------");
+            Thread.sleep(500);
+        }
     }
 
     private void assertLife(int x, int y, int generation)

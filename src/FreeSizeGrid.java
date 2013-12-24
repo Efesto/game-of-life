@@ -1,12 +1,13 @@
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class FreeSizeGrid extends Grid {
 
-    private HashMap<Integer, HashMap<Integer, LifeCell>> columns;
+    private HashMap<Integer, HashMap<Integer, LifeCell>> rows;
 
     public FreeSizeGrid()
     {
-        columns = new HashMap<Integer, HashMap<Integer, LifeCell>>();
+        rows = new HashMap<Integer, HashMap<Integer, LifeCell>>();
     }
 
     @Override
@@ -31,7 +32,7 @@ public class FreeSizeGrid extends Grid {
     private LifeCell getLifeCell(int x, int y) {
         try
         {
-            return (columns.get(x).get(y));
+            return (rows.get(y).get(x));
         }
         catch (Exception e)
         {
@@ -41,17 +42,16 @@ public class FreeSizeGrid extends Grid {
 
     @Override
     public Grid generation(int generation) {
-        FreeSizeGrid currentGenerationGrid = this;
+        FreeSizeGrid currentGenerationGrid = this.getWithEmbrionalCells();
         FreeSizeGrid nextGenerationGrid = currentGenerationGrid;
 
         for (int generationIndex = 0; generationIndex < generation; generationIndex++)
         {
             nextGenerationGrid = new FreeSizeGrid();
-            currentGenerationGrid = currentGenerationGrid.getWithEmbrionalCells();
 
-            for (Integer xInGrid : currentGenerationGrid.columns.keySet())
+            for (Integer yInGrid : currentGenerationGrid.rows.keySet())
             {
-                for (Integer yInGrid : currentGenerationGrid.columns.get(xInGrid).keySet())
+                for (Integer xInGrid : currentGenerationGrid.rows.get(yInGrid).keySet())
                 {
                     LifeCell currentGenerationCell = currentGenerationGrid.getLifeCell(xInGrid, yInGrid);
 
@@ -76,7 +76,7 @@ public class FreeSizeGrid extends Grid {
                 }
             }
 
-            currentGenerationGrid = nextGenerationGrid;
+            currentGenerationGrid = nextGenerationGrid.getWithEmbrionalCells();
         }
 
         return nextGenerationGrid;
@@ -85,21 +85,22 @@ public class FreeSizeGrid extends Grid {
     private FreeSizeGrid getWithEmbrionalCells()
     {
         FreeSizeGrid grid = new FreeSizeGrid();
-        for (Integer xInGrid : columns.keySet())
+        for (Integer yInGrid : rows.keySet())
         {
-            for (Integer yInGrid : columns.get(xInGrid).keySet())
+            for (Integer xInGrid : rows.get(yInGrid).keySet())
             {
                 grid.putCellAt(xInGrid, yInGrid, getLifeCell(xInGrid, yInGrid));
-
-                for (int xIndex = xInGrid - 1; xIndex <= xInGrid + 1; xIndex++)
+                if (grid.getLifeAt(xInGrid, yInGrid))
                 {
-                    for (int yIndex = yInGrid - 1; yIndex <= yInGrid + 1; yIndex++)
+                    for (int xIndex = xInGrid - 1; xIndex <= xInGrid + 1; xIndex++)
                     {
-                        //Celle embrione per espansione infinita
-                        LifeCell embrionicCell = getLifeCell(xIndex, yIndex);
-                        if (embrionicCell == null)
+                        for (int yIndex = yInGrid - 1; yIndex <= yInGrid + 1; yIndex++)
                         {
-                            grid.putCellAt(xIndex, yIndex, new LifeCell());
+                            LifeCell embrionalCell = getLifeCell(xIndex, yIndex);
+                            if (embrionalCell == null)
+                            {
+                                grid.putCellAt(xIndex, yIndex, new LifeCell());
+                            }
                         }
                     }
                 }
@@ -110,12 +111,34 @@ public class FreeSizeGrid extends Grid {
     }
 
     private void putCellAt(int xIndex, int yIndex, LifeCell cell) {
-        if (!columns.containsKey(xIndex))
+        if (!rows.containsKey(yIndex))
         {
-            columns.put(xIndex, new HashMap<Integer, LifeCell>());
+            rows.put(yIndex, new HashMap<Integer, LifeCell>());
         }
 
-        columns.get(xIndex).put(yIndex, cell);
+        rows.get(yIndex).put(xIndex, cell);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder string = new StringBuilder();
+
+        Integer[] rowIndexes = rows.keySet().toArray(new Integer[0]);
+        Arrays.sort(rowIndexes);
+        for (Integer yInGrid : rowIndexes)
+        {
+            Integer[] columnIndexes = rows.get(yInGrid).keySet().toArray(new Integer[0]);
+            Arrays.sort(columnIndexes);
+            for (Integer xInGrid : columnIndexes)
+            {
+                LifeCell cell = getLifeCell(xInGrid, yInGrid);
+                string.append(cell.isAlive ? "*" : " ");
+            }
+
+            string.append("\n");
+        }
+
+        return string.toString();
     }
 
     public class LifeCell {
