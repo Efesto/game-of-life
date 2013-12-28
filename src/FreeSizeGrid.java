@@ -40,27 +40,36 @@ public class FreeSizeGrid extends Grid {
         }
     }
 
+    public void forEveryCell(GridIterator iterator)
+    {
+        for (Integer yInGrid : rows.keySet())
+        {
+            for (Integer xInGrid : rows.get(yInGrid).keySet())
+            {
+                iterator.doForCell(this, xInGrid, yInGrid);
+            }
+        }
+    }
+
     @Override
     public Grid generation(int generation) {
         FreeSizeGrid currentGenerationGrid = this.getWithEmbrionalCells();
-        FreeSizeGrid nextGenerationGrid = currentGenerationGrid;
 
         for (int generationIndex = 0; generationIndex < generation; generationIndex++)
         {
-            nextGenerationGrid = new FreeSizeGrid();
+            final FreeSizeGrid nextGenerationGrid = new FreeSizeGrid();
 
-            for (Integer yInGrid : currentGenerationGrid.rows.keySet())
-            {
-                for (Integer xInGrid : currentGenerationGrid.rows.get(yInGrid).keySet())
-                {
-                    LifeCell currentGenerationCell = currentGenerationGrid.getLifeCell(xInGrid, yInGrid);
+            currentGenerationGrid.forEveryCell(new GridIterator() {
+                @Override
+                public void doForCell(FreeSizeGrid grid, int x, int y) {
+                    LifeCell currentGenerationCell = grid.getLifeCell(x, y);
 
-                    for (int xIndex = xInGrid - 1; xIndex <= xInGrid + 1; xIndex++)
+                    for (int xIndex = x - 1; xIndex <= x + 1; xIndex++)
                     {
-                        for (int yIndex = yInGrid - 1; yIndex <= yInGrid + 1; yIndex++)
+                        for (int yIndex = y - 1; yIndex <= y + 1; yIndex++)
                         {
-                            LifeCell neighbourCell = currentGenerationGrid.getLifeCell(xIndex, yIndex);
-                            if (neighbourCell != null && neighbourCell.isAlive && (xIndex != xInGrid || yIndex != yInGrid))
+                            LifeCell neighbourCell = grid.getLifeCell(xIndex, yIndex);
+                            if (neighbourCell != null && neighbourCell.isAlive && (xIndex != x || yIndex != y))
                             {
                                 currentGenerationCell.neighbours++;
                             }
@@ -72,42 +81,42 @@ public class FreeSizeGrid extends Grid {
                     nextGenerationCell.isAlive = currentGenerationCell.willSurvive();
                     currentGenerationCell.neighbours = 0;
 
-                    nextGenerationGrid.putCellAt(xInGrid, yInGrid, nextGenerationCell);
+                    nextGenerationGrid.putCellAt(x, y, nextGenerationCell);
                 }
-            }
+            });
 
             currentGenerationGrid = nextGenerationGrid.getWithEmbrionalCells();
         }
 
-        return nextGenerationGrid;
+        return currentGenerationGrid;
     }
 
     private FreeSizeGrid getWithEmbrionalCells()
     {
-        FreeSizeGrid grid = new FreeSizeGrid();
-        for (Integer yInGrid : rows.keySet())
-        {
-            for (Integer xInGrid : rows.get(yInGrid).keySet())
-            {
-                grid.putCellAt(xInGrid, yInGrid, getLifeCell(xInGrid, yInGrid));
-                if (grid.getLifeAt(xInGrid, yInGrid))
-                {
-                    for (int xIndex = xInGrid - 1; xIndex <= xInGrid + 1; xIndex++)
+        final FreeSizeGrid gridWithEmbrions = new FreeSizeGrid();
+
+            forEveryCell(new GridIterator() {
+                @Override
+                public void doForCell(FreeSizeGrid grid, int x, int y) {
+                    gridWithEmbrions.putCellAt(x, y, grid.getLifeCell(x, y));
+                    if (grid.getLifeAt(x, y))
                     {
-                        for (int yIndex = yInGrid - 1; yIndex <= yInGrid + 1; yIndex++)
+                        for (int xIndex = x - 1; xIndex <= y + 1; xIndex++)
                         {
-                            LifeCell embrionalCell = getLifeCell(xIndex, yIndex);
-                            if (embrionalCell == null)
+                            for (int yIndex = x - 1; yIndex <= y + 1; yIndex++)
                             {
-                                grid.putCellAt(xIndex, yIndex, new LifeCell());
+                                LifeCell embrionalCell = grid.getLifeCell(xIndex, yIndex);
+                                if (embrionalCell == null)
+                                {
+                                    gridWithEmbrions.putCellAt(xIndex, yIndex, new LifeCell());
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
+            });
 
-        return grid;
+        return gridWithEmbrions;
     }
 
     private void putCellAt(int xIndex, int yIndex, LifeCell cell) {
@@ -158,5 +167,9 @@ public class FreeSizeGrid extends Grid {
 
             return ((keepAlive || toLife)) && !toDeath;
         }
+    }
+
+    abstract class GridIterator {
+        public abstract void doForCell(FreeSizeGrid grid, int x, int y);
     }
 }

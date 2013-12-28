@@ -169,8 +169,6 @@ public class GridTest {
         assertDeath(2,1,3);
         assertDeath(2, 2, 3);
     }
-      
-    @Test
     public void life() throws InterruptedException {
 
         //glider
